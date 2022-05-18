@@ -339,7 +339,7 @@ dist //完整包 cdn bundle
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     "packageManager": "pnpm@7.0.0",
   ```
-  - 213
+  - 测试提交猴子
 # 来源 github 地址
 
 https://github.com/yanyu-fe/vue3-component-demo
