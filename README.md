@@ -339,7 +339,10 @@ dist //完整包 cdn bundle
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     "packageManager": "pnpm@7.0.0",
   ```
+  - 提交代码
+  - 本地打tag `git tag site@v0.0.1` 提交分支触发部署`git push origin site@v0.0.1`
   - 测试提交猴子
+  - 
 # 来源 github 地址
 
 https://github.com/yanyu-fe/vue3-component-demo
