@@ -341,7 +341,7 @@ dist //完整包 cdn bundle
   ```
   - 提交代码
   - 本地打tag `git tag site@v0.0.1` 提交分支触发部署`git push origin site@v0.0.1`
-  - 测试提交猴子
+  - 测试提交123
   - 
 # 来源 github 地址
 
