@@ -1,0 +1,45 @@
+{
+  "name": "vue3-ui-component-demo",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "main": "index.js",
+  "scripts": {
+    "prepare": "husky install",
+    "site": "pnpm --filter=site dev",
+    "site:build": "pnpm --filter=site build"
+  },
+  "dependencies": {
+    "vue": "^3.2.33"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^16.2.4",
+    "@commitlint/config-angular": "^16.2.4",
+    "@mistjs/eslint-config-vue": "^0.0.2",
+    "@types/jsdom": "^16.2.14",
+    "@vitejs/plugin-vue-jsx": "^1.3.10",
+    "@vue/test-utils": "^2.0.0-rc.21",
+    "eslint": "^8.15.0",
+    "husky": "^7.0.4",
+    "jsdom": "^19.0.0",
+    "lint-staged": "^12.4.1",
+    "typescript": "^4.6.4",
+    "vite": "^2.9.8",
+    "vitest": "^0.9.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,vue}": "eslint . --fix"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "webpack"
+      ]
+    }
+  },
+  "resolutions": {
+    "@babel/traverse": "7.17.9"
+  }
+}
