@@ -309,8 +309,14 @@ dist //完整包 cdn bundle
 
 ## 部署
 - github pages
+- github中的settings下pages开启
 - 根目录创建`.github/workflows/site.yaml`文件
   - github/actions使用
+  - 修改vueprss配置文件 打包后的路径`/vue3-ui-component-demo/`就是上面我们的git仓库名
+  ```
+    base: process.env.NODE_ENV === "production" ? "/vue3-ui-component-demo/" : "/",
+  ```
+  - `site.yaml`文件
   ```
   name: site
   on:
@@ -341,7 +347,7 @@ dist //完整包 cdn bundle
   ```
   - 提交代码
   - 本地打tag `git tag site@v0.0.1` 提交分支触发部署`git push origin site@v0.0.1`
-  - 测试提交123
+  - 测试github pages
   - 
 # 来源 github 地址
 

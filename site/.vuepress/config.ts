@@ -6,7 +6,7 @@ import { codeBlockPlugin } from "@yanyu-fe/vuepress-plugin-code-block";
 import { resolve } from "path";
 export default defineUserConfig({
   title: "前端组件库",
-  base: process.env.NODE_ENV === "production" ? "/vue3-component-demo/" : "/",
+  base: process.env.NODE_ENV === "production" ? "/vue3-ui-component-demo/" : "/",
   plugins: [codeBlockPlugin()],
   locales: {
     "/": {
