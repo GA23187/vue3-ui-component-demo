@@ -256,12 +256,12 @@ dist //完整包 cdn bundle
 > git commit -am "update"
 
 > 根据功能模块去提交代码
-> feat:新特性或者新功能
-  fix:修复 bug
-  chore:构建过程或者其他无关的改动
-  refactor:重构
-  ci:持续集成,自动部署
-  注意：feat:这里是英文:
+> feat: 新特性或者新功能
+  fix: 修复 bug
+  chore: 构建过程或者其他无关的改动
+  refactor: 重构
+  ci: 持续集成,自动部署
+  注意：feat: xxx这里是英文:并且有空格与后面文字隔开1
 
 - 根目录运行`pnpm add husky -Dw` `pnpm add @commitlint/cli @commitlint/config-angular`
 - 根目录新建 `.commitlintrc.js`
