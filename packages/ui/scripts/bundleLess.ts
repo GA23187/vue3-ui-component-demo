@@ -6,13 +6,16 @@ import less from 'less'
 import { ES_DIR, LIB_DIR, SRC_DIR } from './tools'
 
 export const bundleLess = async() => {
+  // 将src下面的所有less文件按照原路径移动到es与lib文件加下
   await cpy(`${SRC_DIR}/**/*.less`, ES_DIR)
   await cpy(`${SRC_DIR}/**/*.less`, LIB_DIR)
 
+  // 获取所有的index.less文件
   const lessFiles = await fg('**/index.less', {
     cwd: SRC_DIR,
     onlyFiles: true,
   })
+  // less文件转css文件
   for (const lessFile of lessFiles) {
     const filePath = `${SRC_DIR}/${lessFile}`
     const lessContent = await fs.readFile(filePath, 'utf8')

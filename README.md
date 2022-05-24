@@ -3,7 +3,7 @@
 > monorepo + typescript + tsx + vitest + pnpm + eslint + husky + 自动部署 + vuepress@next
 ## 项目初始化
 - 前置条件
-  - pnpm 6.24.0 (7.0后的命令有区别)
+  - pnpm 6.24.0 (7.0后的命令有区别 必须先过滤后命令 pnpm --filter=site dev)
   - nodejs 14.17.3
 
 - 新建 monorepo 基本结构
@@ -256,11 +256,12 @@ dist //完整包 cdn bundle
 > git commit -am "update"
 
 > 根据功能模块去提交代码
-> feat: 新特性或者新功能
-  fix: 修复 bug
-  chore: 构建过程或者其他无关的改动
-  refactor: 重构
-  ci: 持续集成,自动部署
+> feat:新特性或者新功能
+  fix:修复 bug
+  chore:构建过程或者其他无关的改动
+  refactor:重构
+  ci:持续集成,自动部署
+  注意：feat:这里是英文:
 
 - 根目录运行`pnpm add husky -Dw` `pnpm add @commitlint/cli @commitlint/config-angular`
 - 根目录新建 `.commitlintrc.js`
@@ -302,6 +303,7 @@ dist //完整包 cdn bundle
     },
   ```
 - 配置提交前检查钩子 `npx husky add .husky/pre-commit 'npx --no-install lint-staged'`会在`.husky`文件夹下生成一个`pre-commit`文件
+- 提交测试运行 发现多了` eslint . --fix`等等步骤
 
 ### vitest简单使用
 - 之前已经在所以包下安装了`vitest` utils库下新建一个test文件夹 书写test用例
@@ -348,7 +350,136 @@ dist //完整包 cdn bundle
   - 提交代码
   - 本地打tag `git tag site@v0.0.1` 提交分支触发部署`git push origin site@v0.0.1`
   - 测试github pages
-  - 
+## pnpm 升级到7
+  - `pnpm up -r` 升级依赖
+  - 重新安装依赖发现`@babel/traverse 7.17.10`被撤包了，需要在package.json重写包
+  ```
+    "resolutions": {
+      "@babel/traverse": "7.17.9"
+    }
+  ```
+ - `pnpm add vue -F site`
+
+
+ ## less打包
+ ### nodejs脚本实现迁移style文件 与 把less文件编译成css文件
+ - ui库下的`src`下创建`style`文件夹,里面创建`index.less`入口文件 `dark.less`暗黑模式 `default.less`默认模式
+ - 参考`@ant-design/colors`这个颜色包 然后通过nodejs修改达到自己想要的`colors.less`
+  - 根目录运行`pnpm add @ant-design/colors -D -F ui-design`
+  - ui库下的`src`下新建script文件夹 创建`genColor.ts`
+  - 根目录运行 `pnpm add esno -D -F ui-design` 通过这个工具去直接运行ts文件
+  - 修改ui库下`package.json`下的script新增`"genColor": "esno scripts/genColor.ts"`（用于生成自定义颜色）
+  ```
+      import { promises as fs } from 'fs'
+      import { blue, generate, gold, green, red } from '@ant-design/colors'
+      import { dir_path } from './tools'
+
+      const genColor = (color: string, prefix = 'blue') => {
+        const colors = generate(color)
+        const darkColors = generate(color, {
+          theme: 'dark',
+          backgroundColor: '#222728',
+        })
+        // 默认颜色
+        let code = `@${prefix}-base: ${colors[5]};\n`
+        for (let i = 0; i < colors.length; i++) {
+          if (i === 5)
+            code += `@${prefix}-${i + 1}: @${prefix}-base;\n`
+          else
+            code += `@${prefix}-${i + 1}: ${colors[i]};\n`
+        }
+        // 暗黑颜色
+        code += `\n\n@${prefix}-dark-base: ${darkColors[5]};\n`
+        for (let i = 0; i < darkColors.length; i++) {
+          if (i === 5)
+            code += `@${prefix}-dark-${i + 1}: @${prefix}-dark-base;\n`
+          else
+            code += `@${prefix}-dark-${i + 1}: ${darkColors[i]};\n`
+        }
+        return code
+      }
+
+      const run = async() => {
+        let code = ''
+        // 主色
+        code += genColor(blue[5], 'blue')
+        code += '\n\n'
+        // 警告
+        code += genColor(gold[5], 'gold')
+        code += '\n\n'
+        // 成功
+        code += genColor(green[5], 'green')
+        code += '\n\n'
+        // 失败
+        code += genColor(red[5], 'red')
+        code += '\n\n'
+
+        // 生成一个colors.less的文件放到src/style文件夹下
+        // dir_path =>自定义的reslove(__dirname,'../src/style/colors.less')
+        await fs.writeFile(dir_path('../src/style/colors.less'), code, 'utf8')
+      }
+
+      run()
+
+  ```
+  - scripts下新建tool.ts文件 主要是es模式下没有`__dirname` cjs下才有这个 
+  ```
+    import { dirname, resolve } from 'path'
+    import { fileURLToPath } from 'url'
+
+    export const __dirname = dirname(fileURLToPath(import.meta.url))
+    export const dir_path = (...args: string[]) => resolve(__dirname, ...args)
+    export const SRC_DIR = dir_path('../src')
+    export const ES_DIR = dir_path('../es')
+    export const LIB_DIR = dir_path('../lib')
+  ```
+- 完善button组件样式
+- ui库`src`下新建`style.ts`文件导出组件样式文件
+- site站点使用样式
+  - `config.ts`修改配置`viteOptions.resolve.alias下` 新增`"ui-design": resolve(__dirname, "../../packages/ui/src/index.ts"),`
+  - `clientAppEnhance.ts`文件新增引入 `import "ui-design/style";`
+  - 根目录运行`pnpm add less -D -F site` 添加less支持
+
+- 移动less文件到打包后的文件中 同时生成css文件
+  - 根目录运行`pnpm add cpy -D -F ui-design` 移动文件库 `pnpm add fast-glob -D -F ui-design`查找文件库
+  `pnpm add @types/less @types/node -D -F ui-design` less与node类型包
+  - ui库下的`src`下的script文件夹下创建`bundleLess.ts`
+  - 修改ui库下`package.json`下的script新增`"bundleLess": "esno scripts/bundleLess.ts"`
+  ```
+    import { promises as fs } from 'fs'
+    import { dirname, resolve } from 'path'
+    import cpy from 'cpy'
+    import fg from 'fast-glob'
+    import less from 'less'
+    import { ES_DIR, LIB_DIR, SRC_DIR } from './tools'
+
+    export const bundleLess = async() => {
+      // 将src下面的所有less文件按照原路径移动到es与lib文件加下
+      await cpy(`${SRC_DIR}/**/*.less`, ES_DIR)
+      await cpy(`${SRC_DIR}/**/*.less`, LIB_DIR)
+
+      // 获取所有的index.less文件
+      const lessFiles = await fg('**/index.less', {
+        cwd: SRC_DIR,
+        onlyFiles: true,
+      })
+      // less文件转css文件
+      for (const lessFile of lessFiles) {
+        const filePath = `${SRC_DIR}/${lessFile}`
+        const lessContent = await fs.readFile(filePath, 'utf8')
+        const code = await less.render(lessContent, {
+          paths: [SRC_DIR, dirname(filePath)],
+        })
+        await fs.writeFile(resolve(ES_DIR, lessFile.replace('.less', '.css')), code.css)
+        await fs.writeFile(resolve(LIB_DIR, lessFile.replace('.less', '.css')), code.css)
+      }
+    }
+
+    bundleLess()
+  ```
+
+
+
 # 来源 github 地址
 
 https://github.com/yanyu-fe/vue3-component-demo

@@ -2,12 +2,14 @@ import { promises as fs } from 'fs'
 import { blue, generate, gold, green, red } from '@ant-design/colors'
 import { dir_path } from './tools'
 
+// 生成颜色色阶文件
 const genColor = (color: string, prefix = 'blue') => {
   const colors = generate(color)
   const darkColors = generate(color, {
     theme: 'dark',
     backgroundColor: '#222728',
   })
+  // 默认颜色
   let code = `@${prefix}-base: ${colors[5]};\n`
   for (let i = 0; i < colors.length; i++) {
     if (i === 5)
@@ -15,7 +17,7 @@ const genColor = (color: string, prefix = 'blue') => {
     else
       code += `@${prefix}-${i + 1}: ${colors[i]};\n`
   }
-
+  // 暗黑颜色
   code += `\n\n@${prefix}-dark-base: ${darkColors[5]};\n`
   for (let i = 0; i < darkColors.length; i++) {
     if (i === 5)
