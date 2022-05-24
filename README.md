@@ -434,11 +434,38 @@ dist //完整包 cdn bundle
     export const LIB_DIR = dir_path('../lib')
   ```
 - 完善button组件样式
-- ui库`src`下新建`style.ts`文件导出组件样式文件
+  - button文件夹下新建style文件夹 在style下新建`index.ts` `index.less`
+  - `index.ts`中引入`index.less` 这个文件为后期的样式按需加载做准备
+  - `index.less`
+    ```
+      @import "../../style/index.less";
+      @btn-prefix:~"@{ui-prefix}-btn";
+      .@{btn-prefix}{
+        &-primary{
+          background: @primary-color;
+        }
+      }
+    ```
+  - 修改下`button.tsx`文件 定义class
+- 到这里我们发现其实button组件并没有引入对应的样式文件,可以ui库`src`下新建`style.ts`文件导出组件样式文件`import './button/style'` 在其他地方使用时，只有引入这个`style.ts`文件就会联动的引入button的样式
 - site站点使用样式
   - `config.ts`修改配置`viteOptions.resolve.alias下` 新增`"ui-design": resolve(__dirname, "../../packages/ui/src/index.ts"),`
   - `clientAppEnhance.ts`文件新增引入 `import "ui-design/style";`
   - 根目录运行`pnpm add less -D -F site` 添加less支持
+  - 同时注意在vuepress中的前缀和我们ui中定义的是不一样的,需要覆盖下修改vuepress的`config.ts`中的viteOptions
+    ```
+      css: {
+        preprocessorOptions: {
+          less: {
+            modifyVars: {
+              "html-dark-selector": "~'html.dark'",
+            },
+          },
+        },
+      },
+    ```
+
+
 
 - 移动less文件到打包后的文件中 同时生成css文件
   - 根目录运行`pnpm add cpy -D -F ui-design` 移动文件库 `pnpm add fast-glob -D -F ui-design`查找文件库
@@ -478,7 +505,146 @@ dist //完整包 cdn bundle
     bundleLess()
   ```
 
+### 更新vuepress@next
+> 因为2.0.0-beta44更新了.vuepress/clientAppEnhance.{js,ts} has been renamed to .vuepress/client.{js,ts}
+- 根目录运行`pnpm up -r`
+- 修改`clientAppEnhance.ts`文件名为`client.ts`,并修改里面的方法
 
+### 样式打包
+- ui库下新建`vite.config.style.ts`文件用于样式打包配置
+  ```
+  import { defineConfig } from 'vite'
+  import fg from 'fast-glob' 
+
+  // 需要打包的文件
+  const files = fg.sync('**/style/index.ts', {
+    cwd: process.cwd(),
+    onlyFiles: true,
+  })
+
+  export default defineConfig({
+    build: {
+      target: 'modules',
+      outDir: 'es',
+      emptyOutDir: false,
+      minify: false,
+      rollupOptions: {
+        external: /\.less$/, // 忽略.less结尾文件
+        input: files,
+        output: [
+          // esm
+          {
+            format: 'es',
+            dir: 'es',
+            entryFileNames: '[name].js',
+            preserveModules: true,
+            preserveModulesRoot: 'src',
+          },
+          // cjs
+          {
+            format: 'cjs',
+            dir: 'lib',
+            entryFileNames: '[name].js',
+            preserveModules: true,
+            preserveModulesRoot: 'src',
+          },
+        ],
+      },
+      lib: {
+        entry: '',
+        formats: ['es', 'cjs'],
+      },
+    }
+  })
+  ```
+- ui库下修改package.json文件新增script`"bundleStyle": "vite build --config vite.config.style.ts"`
+- 运行测试bundleStyle
+  - es/button/style/index.js
+    ```
+      import "./style/index.less";
+      import "../../index.less";
+    ```
+- 按需引入的二种方式 引入index.less 或者index.css,但目前我们打出的包中index.js只提供了导出less文件
+- 所以我们接下来可以借助插件实现 另外打包出一个和index.js类似只是导出的是css文件
+- 修改vite.config.style.ts 利用插件
+    ```
+      plugins: [
+          {
+            name: 'vite-plugin-style',
+            generateBundle(config, bundle) {
+              const keys = Object.keys(bundle)
+              for (const key of keys) {
+                const bundler: any = bundle[key]
+                // 输出文件（rollup内置方法）
+                this.emitFile({
+                  type: 'asset',
+                  fileName: key.replace('index.js', 'css.js'),
+                  source: bundler.code.replace(/\.less/g, '.css'),
+                })
+              }
+            },
+          },
+      ]
+    ```
+- 运行测试bundleStyle
+  - 得到es/button/style/index.js | css.js
+
+### bundle包
+- ui库下新建`vite.config.bundle.ts`文件用于打包bundle配置
+  ```
+  import { defineConfig } from 'vite'
+
+  export default defineConfig({
+    build: {
+      outDir: 'dist',
+      emptyOutDir: false,
+      minify: true,
+      rollupOptions: {
+        external: [
+          'vue',
+          '@yanyu-fe/utils',
+        ],
+        output: {
+          exports: 'named',
+          globals: {
+            'vue': 'Vue',
+            '@yanyu-fe/utils': 'yanyuUtils',
+          },
+        },
+      },
+      lib: {
+        entry: 'src/index.ts',
+        formats: ['umd', 'cjs', 'es'],
+        name: 'uiDesign',
+      },
+    },
+  })
+
+  ```
+- ui库下修改`package.json`文件新增script`"bundle": "vite build --config vite.config.bundle.ts"`
+- 测试打包 bundle
+  - 发现出现dist/ui-design.cjs.js | ui-design.es.js | ui-design.umd.js 3种格式的包
+  - 其中es模式的包未被压缩，需要借助插件实现压缩
+  - 注意单独这个命令 其中并没有打包进去样式
+- 新建`vite.config.bundle.style.ts`文件 修改package.json文件新增script`"bundleLessMin": "vite build --config vite.config.bundle.style.ts"`
+  - 运行会发现 出现dist/style.css | ui-design.cjs.js | ui-design.es.js | ui-design.umd.js
+  - 所以可以投机取巧下 先运行这个命令生成上面4个文件后，再运行bundle命令 替换后面的3个格式包达到bundle与样式都存在的包
+  - `"bundleMin": "pnpm bundleLessMin && pnpm bundle"`
+
+- 整理下ui库下package.json中的script
+  - `pnpm add npm-run-all -D -F ui-design`
+  ```
+    "scripts": {
+      "build:comp": "vite build", // 组件打包
+      "genColor": "esno scripts/genColor.ts", // 生成基本色阶
+      "bundleLess": "esno scripts/bundleLess.ts", // 移动less文件到打包文件夹 并生成css文件
+      "bundleStyle": "vite build --config vite.config.style.ts", // 样式打包
+      "bundle": "vite build --config vite.config.bundle.ts", // bundle
+      "bundleLessMin": "vite build --config vite.config.bundle.style.ts",
+      "bundleMin": "pnpm bundleLessMin && pnpm bundle",
+      "build": "run-s build:comp genColor  bundleLess bundleStyle bundleMin"
+    },
+  ```
 
 # 来源 github 地址
 
