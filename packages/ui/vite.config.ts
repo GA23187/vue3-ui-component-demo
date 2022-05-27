@@ -11,7 +11,7 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'vue',
-        '@yanyu-fe/utils',
+        '@ga23187/utils',
       ],
       input: ['src/index.ts'],
       output: [

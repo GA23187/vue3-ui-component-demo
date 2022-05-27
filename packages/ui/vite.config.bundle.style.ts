@@ -8,13 +8,13 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'vue',
-        '@yanyu-fe/utils',
+        '@ga23187/utils',
       ],
       output: {
         exports: 'named',
         globals: {
           'vue': 'Vue',
-          '@yanyu-fe/utils': 'yanyuUtils',
+          '@ga23187/utils': 'yanyuUtils',
         },
       },
     },

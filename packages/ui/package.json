@@ -24,7 +24,7 @@
     "build": "run-s build:comp genColor bundleLess bundleStyle bundleMin"
   },
   "dependencies": {
-    "@yanyu-fe/utils": "workspace:^1.0.0",
+    "@ga23187/utils": "workspace:^1.0.0",
     "vue": "^3.2.36"
   },
   "devDependencies": {

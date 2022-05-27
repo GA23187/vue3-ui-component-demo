@@ -187,7 +187,7 @@ dist //完整包 cdn bundle
       rollupOptions: {
         external: [
           'vue',
-          '@yanyu-fe/utils',
+          '@ga23187/utils',
         ],
         input: ['src/index.ts'],
         output: [
@@ -593,8 +593,11 @@ dist //完整包 cdn bundle
 - ui库下新建`vite.config.bundle.ts`文件用于打包bundle配置
   ```
   import { defineConfig } from 'vite'
+  import vueJsx from '@vitejs/plugin-vue-jsx'
+  import vue from '@vitejs/plugin-vue'
 
   export default defineConfig({
+    plugins: [vueJsx(), vue()],
     build: {
       outDir: 'dist',
       emptyOutDir: false,
@@ -602,13 +605,13 @@ dist //完整包 cdn bundle
       rollupOptions: {
         external: [
           'vue',
-          '@yanyu-fe/utils',
+          '@ga23187/utils',
         ],
         output: {
           exports: 'named',
           globals: {
             'vue': 'Vue',
-            '@yanyu-fe/utils': 'yanyuUtils',
+            '@ga23187/utils': 'yanyuUtils',
           },
         },
       },
@@ -645,6 +648,32 @@ dist //完整包 cdn bundle
       "build": "run-s build:comp genColor  bundleLess bundleStyle bundleMin"
     },
   ```
+
+## 发布到npm
+- 我们使用的pnpm工具 里面定义了workspace的前置包名，所以发包方式和npm发包有差异
+- 注册一个npm账号
+- npm 发包必须使用 npm 的源镜像，如果你的 npm 源设置了淘宝镜像则需要切换回来
+  ```
+    淘宝镜像：npm config set registry https://registry.npm.taobao.org
+    npm镜像：npm config set registry https://registry.npmjs.org
+  ```
+- 根目录下运行`npm login`会让你输入
+  ```
+    λ npm login
+    Username: xxxx
+    Password:
+    Email: (this IS public) xxxxx@qq.com
+    npm notice Please check your email for a one-time password (OTP)
+    Enter one-time password from your authenticator app: xxxx
+    Logged in as xxxx on https://registry.npmjs.org/.
+  ```
+- 发布`pnpm publish --filter=utils` 
+  - 提示
+    ```
+      ERR_PNPM_GIT_NOT_UNCLEAN  Unclean working tree. Commit or stash changes first.
+        If you want to disable Git checks on publish, set the "git-checks" setting to "false", orrun again with "--no-git-checks".
+    ```
+  - 先提交下代码
 
 # 来源 github 地址
 
