@@ -1,5 +1,5 @@
 {
-  "name": "ui-design",
+  "name": "@ga23187/ui-design",
   "version": "1.0.0",
   "description": "",
   "keywords": [],
@@ -12,6 +12,15 @@
     "lib",
     "es",
     "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "sideEffects":[
+    "es/**/style/**.less",
+    "lib/**/style/**.less",
+    "dist/**.css"
   ],
   "scripts": {
     "build:comp": "vite build",

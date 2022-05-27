@@ -652,11 +652,19 @@ dist //完整包 cdn bundle
 ## 发布到npm
 - 我们使用的pnpm工具 里面定义了workspace的前置包名，所以发包方式和npm发包有差异
 - 注册一个npm账号
-- npm 发包必须使用 npm 的源镜像，如果你的 npm 源设置了淘宝镜像则需要切换回来
+- npm 发包必须使用 npm 的源镜像如果你的 npm 源设置了淘宝镜像则需要切换回来
+  - 方式一 会有点麻烦 但是其实你如果使用了nrm 镜像管理工具还是比较简单的(我们先使用这种方式)
   ```
     淘宝镜像：npm config set registry https://registry.npm.taobao.org
     npm镜像：npm config set registry https://registry.npmjs.org
   ```
+  - 还有一种方式是package.json文件中添加这个配置，指定发布到的地址
+    ```
+      "publishConfig":{
+        "registry": "https://registry.npmjs.org/"
+      }
+    ```
+    配合下面的登录`npm login --registry=https://registry.npmjs.org/`
 - 根目录下运行`npm login`会让你输入
   ```
     λ npm login
@@ -668,12 +676,37 @@ dist //完整包 cdn bundle
     Logged in as xxxx on https://registry.npmjs.org/.
   ```
 - 发布`pnpm publish --filter=utils` 
-  - 提示
+  - 提示 因为本地有代码修改了还未提交
     ```
       ERR_PNPM_GIT_NOT_UNCLEAN  Unclean working tree. Commit or stash changes first.
         If you want to disable Git checks on publish, set the "git-checks" setting to "false", orrun again with "--no-git-checks".
     ```
-  - 先提交下代码
+  - 先提交下代码,接着执行发现如下错误
+  ```
+    npm ERR! code E402
+    npm ERR! 402 Payment Required - PUT https://registry.npmjs.org/@xxxx%2futils - You must sign up for private packages
+  ```
+    - 原因是@前置的包是私有的 需要收费，我们可以修改下该包的package.json文件 指定其为公共的
+      ```
+      "publishConfig": {
+        "access": "public"
+      }
+      ```
+  - 再次发布 这次可以带上--no-git-checks `pnpm publish --filter=utils --no-git-checks`
+  - 其他 补充npm包bug地址等等
+  - sideEffects：让 webpack 去除 tree shaking 带来副作用的代码
+    https://github.com/happylindz/blog/issues/15
+    - ui库下package.json文件添加 主要作用是webpack打包时会剔除下面列出的文件
+      ```
+      "sideEffects":[
+        "es/**/style/**.less",
+        "lib/**/style/**.less",
+        "dist/**.css"
+      ]
+      ```
+  - 其他npm发布相关指令
+    - 比如判断自己是否已经登录 npm whoami
+    - 参考：https://blog.csdn.net/u011194386/article/details/109714164
 
 # 来源 github 地址
 
