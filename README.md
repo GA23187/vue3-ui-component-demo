@@ -280,6 +280,8 @@ dist //完整包 cdn bundle
   - 配置下
     
     - 根目录运行`npx husky add .husky/commit-msg 'npx commitlint --edit'`会在`.husky`文件夹下生成一个`commit-msg`文件
+      - 注意windows下上面这个指令的后面写入内容到问文件中无效，需要先创建文件再手动写入命令
+      - https://blog.csdn.net/qq_41308489/article/details/121734786
   - 提交测试下
     - 发现失败 提示`type must be one of [build,ci ,docs ...]`,修改下`commitlintrc`配置,添加
     ```
@@ -294,16 +296,33 @@ dist //完整包 cdn bundle
         ]
     }
     ```
+
+    - 踩坑`git commit -m 'feat: 单引号提交报错'`信息如下
+
+      `error: pathspec '123'' did not match any file(s) known to git`
+
+      - 需要双引号包裹
+
+      - https://blog.csdn.net/watercatmiao/article/details/81396088
 ### eslint规则检查
 - 根目录运行`pnpm add lint-staged -Dw` 安装lint-staged 用于提交时进行eslint检查
+
 - `package.json`中配置下
   ```
     "lint-staged": {
     "*.{ts,tsx,vue}": "eslint . --fix"
     },
   ```
+  
 - 配置提交前检查钩子 `npx husky add .husky/pre-commit 'npx --no-install lint-staged'`会在`.husky`文件夹下生成一个`pre-commit`文件
+
 - 提交测试运行 发现多了` eslint . --fix`等等步骤
+
+
+### 补充TODO
+
+- 可以借助一个插件`commitizen`实现符合格式的commit信息
+- https://www.cnblogs.com/qdlhj/p/14579218.html
 
 ### vitest简单使用
 - 之前已经在所以包下安装了`vitest` utils库下新建一个test文件夹 书写test用例
@@ -587,6 +606,7 @@ dist //完整包 cdn bundle
       ]
     ```
 - 运行测试bundleStyle
+  
   - 得到es/button/style/index.js | css.js
 
 ### bundle包
@@ -695,6 +715,9 @@ dist //完整包 cdn bundle
   - 再次发布 这次可以带上--no-git-checks `pnpm publish --filter=utils --no-git-checks`
   - 其他 补充npm包bug地址等等
   - sideEffects：让 webpack 去除 tree shaking 带来副作用的代码
+    sideEffects 支持两种写法，一种是 false，一种是数组。
+    - false 为了告诉 webpack 我这个 npm 包里的所有文件代码都是没有副作用的
+    - 数组则表示告诉 webpack 我这个 npm 包里指定文件代码是没有副作用的
     https://github.com/happylindz/blog/issues/15
     - ui库下package.json文件添加 主要作用是webpack打包时会剔除下面列出的文件
       ```
